@@ -1,0 +1,10 @@
+Please Master These 10 Python Functions…
+https://www.youtube.com/watch?v=kGcUtckifXc
+
+
+GitHub PUBLIC Path (Prasanna): ?????     https://github.com/prabhupr70/FirstAIAgent
+Used https://tableconvert.com/excel-to-json   to convert  Excel file --> JSON file
+
+Step-by-step
+============
+python demo.py
