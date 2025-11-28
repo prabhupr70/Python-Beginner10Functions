@@ -15,11 +15,19 @@
 #pip install pyarrow
 #pip install pyjanitor
 #pip install ipykernel
+#pip install rembg pillow
+#pip install onnxruntime
+#pip install yfinance
+#pip install matplotlib
+#pip install sounddevice
+#pip install scipy
+#pip install anthropic python-docx
+#pip install pdf2docx
+#pip install PyPDF2
 
 import pandas as pd
 import openpyxl
 
-'''
 #df = pd.read_csv('orders.csv') #Reading CSV file
 #df = pd.read_excel('orders.xlsx') #Reading Excel file   
 df = pd.read_json('orders.json') #Reading JSON file

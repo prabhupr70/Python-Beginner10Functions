@@ -1,0 +1,16 @@
+#https://www.facebook.com/pythonclcoding/posts/pfbid0US6iCkCgYUD7UckbNvxrFacX6vFVyfsjaEaGQ5XZdnL1jEA4x6h4R5kyGXrnD7gil
+#https://www.facebook.com/photo/?fbid=1307441221410093&set=a.456019453218945
+
+# Files to be saved in - C:\Prasanna\Personal\Education-Technical\Python-Beginner10Functions\
+#pip install rembg pillow
+#pip install onnxruntime
+
+from PIL import Image   
+
+original_image  = "3_ImageMirroringWithPython.jpg"
+img = Image.open(original_image)
+original_image_transposed = img.transpose(method=Image.FLIP_LEFT_RIGHT)
+original_image_mirrored = "3_ImageMirroringWithPython_Mirrored.jpg"
+original_image_transposed.save(original_image_mirrored)
+Image.open(original_image).show()
+Image.open(original_image_mirrored).show()

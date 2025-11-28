@@ -1,0 +1,196 @@
+"""
+Claude Word Document Generator
+Generates Word documents using Claude API and python-docx library
+"""
+
+import anthropic
+from docx import Document
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import os
+
+api_key = os.getenv('CLAUDE_API_KEY')
+print(f"API Key: {api_key}")
+
+#https://www.google.com/search?q=iun+vs+code+where+to+define+environment+variables+in+python&sca_esv=b8f764f539275d3b&sxsrf=AE3TifNEZi5WUpfkNkWLzXEKqtCYYWsP1Q%3A1764225783273&source=hp&ei=9_InaaynDq6A0PEPpOfTqQk&iflsig=AOw8s4IAAAAAaSgBB0UQenmwRV3SwU6EUWBFiHKsctWS&oq=IUn+VS+Code+where+to+define+environment+&gs_lp=Egdnd3Mtd2l6IihJVW4gVlMgQ29kZSB3aGVyZSB0byBkZWZpbmUgZW52aXJvbm1lbnQgKgIIATIHECEYoAEYCjIHECEYoAEYCjIHECEYoAEYCjIHECEYoAEYCkjwTVAAWLg7cAB4AJABAJgBxwWgAewwqgEONC4xOC4yLjEuMS4zLjG4AQPIAQD4AQGYAh6gAscxwgIEECMYJ8ICChAjGIAEGCcYigXCAgsQABiABBiRAhiKBcICCxAAGIAEGLEDGIMBwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICDhAAGIAEGLEDGIMBGIoFwgIOEAAYgAQYkQIYsQMYigXCAggQLhiABBixA8ICCxAuGIAEGLEDGIMBwgIFEAAYgATCAg4QLhiABBjHARiOBRivAcICDhAuGIAEGLEDGIMBGOUEwgILEC4YgAQYsQMY5QTCAgUQLhiABMICBhAAGBYYHsICCxAAGIAEGIYDGIoFwgIIEAAYogQYiQXCAggQABiABBiiBMICBRAAGO8FwgIGEAAYDRgewgIFECEYqwKYAwCSBww0LjE4LjIuMS40LjGgB468AbIHDDQuMTguMi4xLjQuMbgHxzHCBwYxOC45LjPIByk&sclient=gws-wiz
+#def create_word_doc_with_claude(prompt, output_filename="output.docx", api_key=None):
+def create_word_doc_with_claude(prompt, output_filename="output.docx", api_key='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'):
+    """
+    Generate a Word document using Claude API
+    
+    Args:
+        prompt: Your request for what document to create
+        output_filename: Name of the output .docx file
+        api_key: Your Anthropic API key (or set ANTHROPIC_API_KEY env variable)
+    """
+    
+    # Initialize Claude client
+    if api_key is None:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+    
+    if not api_key:
+        raise ValueError("API key required. Set ANTHROPIC_API_KEY environment variable or pass api_key parameter")
+    
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    # Create a detailed prompt for Claude
+    full_prompt = f"""
+    I need you to create structured content for a Word document. 
+    
+    User request: {prompt}
+    
+    Please provide the content in a clear, structured format with:
+    - A title
+    - Section headings
+    - Body text for each section
+    - Any lists or bullet points
+    - Tables if needed (format as: | Header 1 | Header 2 | with rows below)
+    
+    Format your response so it's easy to parse into a Word document.
+    Use clear markers like "TITLE:", "SECTION:", "BULLET:", "TABLE:" to indicate different elements.
+    """
+    
+    # Call Claude API
+    print("Generating content with Claude...")
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4000,
+        messages=[
+            {"role": "user", "content": full_prompt}
+        ]
+    )
+    
+    # Extract the text content
+    content = message.content[0].text
+    print("Content generated! Creating Word document...")
+    
+    # Create Word document
+    doc = Document()
+    
+    # Parse and add content to document
+    lines = content.split('\n')
+    current_section = None
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Check for special markers
+        if line.startswith('TITLE:'):
+            title_text = line.replace('TITLE:', '').strip()
+            title = doc.add_heading(title_text, 0)
+            title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+        elif line.startswith('SECTION:'):
+            section_text = line.replace('SECTION:', '').strip()
+            doc.add_heading(section_text, 1)
+            
+        elif line.startswith('SUBSECTION:'):
+            subsection_text = line.replace('SUBSECTION:', '').strip()
+            doc.add_heading(subsection_text, 2)
+            
+        elif line.startswith('BULLET:') or line.startswith('- ') or line.startswith('* '):
+            bullet_text = line.replace('BULLET:', '').replace('- ', '').replace('* ', '').strip()
+            doc.add_paragraph(bullet_text, style='List Bullet')
+            
+        elif line.startswith('NUMBER:'):
+            number_text = line.replace('NUMBER:', '').strip()
+            doc.add_paragraph(number_text, style='List Number')
+            
+        elif '|' in line and line.count('|') >= 2:
+            # Simple table parsing
+            cells = [cell.strip() for cell in line.split('|') if cell.strip()]
+            if cells and not any(c == '---' or c == '-' for c in cells):
+                # This is a table row
+                # Note: This is simplified - you may want to enhance table handling
+                doc.add_paragraph(' | '.join(cells))
+                
+        else:
+            # Regular paragraph
+            if line and not line.startswith('#'):
+                doc.add_paragraph(line)
+    
+    # Save document
+    doc.save(output_filename)
+    print(f"✓ Document saved as '{output_filename}'")
+    
+    return output_filename
+
+
+def create_custom_word_doc(title, sections, output_filename="custom_output.docx"):
+    """
+    Create a Word document with custom structure without using Claude API
+    Useful if you already have the content structured
+    
+    Args:
+        title: Document title
+        sections: List of dicts with 'heading' and 'content' keys
+        output_filename: Name of output file
+    """
+    doc = Document()
+    
+    # Add title
+    title_heading = doc.add_heading(title, 0)
+    title_heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Add sections
+    for section in sections:
+        doc.add_heading(section['heading'], 1)
+        
+        if isinstance(section['content'], list):
+            for item in section['content']:
+                doc.add_paragraph(item, style='List Bullet')
+        else:
+            doc.add_paragraph(section['content'])
+    
+    doc.save(output_filename)
+    print(f"✓ Document saved as '{output_filename}'")
+    return output_filename
+
+
+# Example usage
+if __name__ == "__main__":
+    # Example 1: Using Claude API
+    print("=== Example 1: Generate with Claude ===")
+    
+    # Make sure to set your API key first:
+    # export ANTHROPIC_API_KEY='your-api-key-here'
+    
+    try:
+        create_word_doc_with_claude(
+            prompt="Create a professional project proposal for a Marketing Campaign Redesign for Q1 2025. Include an executive summary, objectives, timeline, and budget overview.",
+            output_filename="marketing_proposal.docx"
+        )
+    except ValueError as e:
+        print(f"Error: {e}")
+        print("Set your API key with: export ANTHROPIC_API_KEY='your-key'")
+    
+    print("\n=== Example 2: Custom structure without API ===")
+    
+    # Example without Claude API
+    sections = [
+        {
+            'heading': 'Executive Summary',
+            'content': 'This project aims to redesign our marketing campaign for maximum impact in Q1 2025.'
+        },
+        {
+            'heading': 'Objectives',
+            'content': [
+                'Increase brand awareness by 40%',
+                'Generate 10,000 new leads',
+                'Improve conversion rate by 25%',
+                'Launch on 3 new social platforms'
+            ]
+        },
+        {
+            'heading': 'Timeline',
+            'content': 'The project will span 3 months from January to March 2025, with weekly milestone reviews.'
+        }
+    ]
+    
+    create_custom_word_doc(
+        title="Marketing Campaign Redesign - Q1 2025",
+        sections=sections,
+        output_filename="marketing_custom.docx"
+    )

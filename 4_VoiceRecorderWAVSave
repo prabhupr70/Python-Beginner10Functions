@@ -1,0 +1,17 @@
+#https://www.facebook.com/pythonclcoding/posts/pfbid0cXA3MCnhtYXTgCUci7mzKJbR5CkHeUsnqWZ3ENSR5jsxiQmxCE2ZiG18DcXhvt15l
+
+#pip install sounddevice
+#pip install scipy
+import sounddevice as sd
+import scipy.io.wavfile as wav
+
+sec = int (input ("Record Seconds: ")) #5  #Duration of recording in seconds
+fs = 44100  #Sample rate
+
+print("Recording...")
+audio = sd.rec(int(sec * fs), samplerate=fs, channels=2)
+sd.wait()  #Wait until recording is finished
+#print("Recording complete.")    
+
+wav.write("4_VoiceRecorderWAVSave.wav", fs, audio)  #Save as WAV file
+print("Saved Recording <4_VoiceRecorderWAVSave.wav> complete.")
